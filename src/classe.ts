@@ -314,3 +314,186 @@ class Audit {
     return this.anomalies.filter(a => a.statut !== StatutAnomalie.Resolue);
   }
 }
+
+// Exercice 3 - Partie 6 : Réassurance et mutualisation
+
+// Contrat de réassurance
+class ContratReassurance {
+  constructor(
+    public id: number,
+    public compagniePartenaire: string,
+    public periodeDebut: string,
+    public periodeFin: string,
+    public pourcentageCouv: number
+  ) {}
+
+  estValide(date: string): boolean {
+    return date >= this.periodeDebut && date <= this.periodeFin;
+  }
+}
+
+// Contrat d’assurance avec réassureurs
+class ContratAvecReassurance extends ContratAvecBeneficiaires {
+  public reassurances: ContratReassurance[] = [];
+
+  ajouterReassurance(reassurance: ContratReassurance) {
+    this.reassurances.push(reassurance);
+  }
+
+  // Calcul des parts de remboursement pour un sinistre donné
+  calculerPartReassureurs(sinistre: Sinistre, montant: number): { compagnie: string; part: number }[] {
+    const actifs = this.reassurances.filter(r => r.estValide(sinistre.date));
+    return actifs.map(r => ({
+      compagnie: r.compagniePartenaire,
+      part: (montant * r.pourcentageCouv) / 100,
+    }));
+  }
+}
+
+// Part 7 : Système complet
+// Enums
+
+enum PaymentStatus {
+    PENDING,
+    COMPLETED,
+    FAILED
+}
+
+enum Country {
+    FRANCE,
+    GERMANY,
+    ITALY,
+    SPAIN
+}
+
+// Interfaces
+
+interface ContactInfo {
+    String getEmail();
+    String getPhoneNumber();
+}
+
+interface Option {
+    String getName();
+    double getPrice();
+}
+
+// Classes
+class Person implements ContactInfo {
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private Country country;
+
+    public Person(String firstName, String lastName, String email, String phoneNumber, Country country) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.country = country;
+    }
+
+    // Implémentation interface ContactInfo
+    @Override
+    public String getEmail() {
+        return email;
+    }
+
+    @Override
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    // Getters / setters
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public Country getCountry() { return country; }
+}
+
+class Payment {
+    private double amount;
+    private PaymentStatus status;
+
+    public Payment(double amount) {
+        this.amount = amount;
+        this.status = PaymentStatus.PENDING;
+    }
+
+    // Méthodes
+    public void processPayment() {
+        // logique de paiement
+        this.status = PaymentStatus.COMPLETED;
+    }
+
+    public PaymentStatus getStatus() { return status; }
+    public double getAmount() { return amount; }
+}
+
+class Contract {
+    private String contractId;
+    private Person customer;
+    private List<Payment> payments;
+    private List<Option> options;
+
+    public Contract(String contractId, Person customer) {
+        this.contractId = contractId;
+        this.customer = customer;
+        this.payments = new ArrayList<>();
+        this.options = new ArrayList<>();
+    }
+
+    // Méthodes
+    public void addPayment(Payment payment) {
+        payments.add(payment);
+    }
+
+    public void addOption(Option option) {
+        options.add(option);
+    }
+
+    public double getTotalPaid() {
+        return payments.stream()
+                .filter(p -> p.getStatus() == PaymentStatus.COMPLETED)
+                .mapToDouble(Payment::getAmount)
+                .sum();
+    }
+
+    // Getters
+    public String getContractId() { return contractId; }
+    public Person getCustomer() { return customer; }
+}
+
+class Claim {
+    private String claimId;
+    private Contract relatedContract;
+    private Expert expert;
+
+    public Claim(String claimId, Contract relatedContract, Expert expert) {
+        this.claimId = claimId;
+        this.relatedContract = relatedContract;
+        this.expert = expert;
+    }
+
+    // Méthodes
+    public void evaluateClaim() {
+    }
+
+    // Getters
+    public Expert getExpert() { return expert; }
+    public String getClaimId() { return claimId; }
+}
+class Expert extends Person {
+    private String specialty;
+
+    public Expert(String firstName, String lastName, String email, String phoneNumber, Country country, String specialty) {
+        super(firstName, lastName, email, phoneNumber, country);
+        this.specialty = specialty;
+    }
+
+    // Méthodes
+    public void analyzeClaim(Claim claim) {
+    }
+
+    public string getSpecialty() { return specialty; }
+}
